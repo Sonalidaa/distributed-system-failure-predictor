@@ -35,8 +35,8 @@ def generate_normal_metrics():
 
 def generate_failure_sequence(failure_type, length=10):
     """
-    Generate a sequence showing system deterioration
-    before a failure.
+    Generate a gradual and noisy degradation sequence
+    before a system failure.
     """
 
     sequence = []
@@ -47,60 +47,117 @@ def generate_failure_sequence(failure_type, length=10):
 
         metrics = generate_normal_metrics()
 
+        # Gradual degradation with realistic noise
+
         if failure_type == "cpu_overload":
 
             metrics["cpu_usage"] = (
-                45 + progress * 50 + np.random.normal(0, 3)
+                45
+                + progress * 25
+                + np.random.normal(0, 6)
             )
 
-            metrics["latency_ms"] += progress * 300
-            metrics["error_rate"] += progress * 0.15
+            metrics["latency_ms"] += (
+                progress * 120
+                + np.random.normal(0, 15)
+            )
+
+            metrics["error_rate"] += (
+                progress * 0.06
+                + np.random.normal(0, 0.01)
+            )
 
         elif failure_type == "memory_leak":
 
             metrics["memory_usage"] = (
-                50 + progress * 48 + np.random.normal(0, 2)
+                52
+                + progress * 28
+                + np.random.normal(0, 5)
             )
 
-            metrics["latency_ms"] += progress * 250
-            metrics["error_rate"] += progress * 0.10
+            metrics["latency_ms"] += (
+                progress * 100
+                + np.random.normal(0, 15)
+            )
+
+            metrics["error_rate"] += (
+                progress * 0.05
+                + np.random.normal(0, 0.01)
+            )
 
         elif failure_type == "database_slowdown":
 
             metrics["db_latency_ms"] = (
-                30 + progress * 500 + np.random.normal(0, 10)
+                35
+                + progress * 180
+                + np.random.normal(0, 15)
             )
 
-            metrics["latency_ms"] += progress * 400
-            metrics["error_rate"] += progress * 0.15
+            metrics["latency_ms"] += (
+                progress * 150
+                + np.random.normal(0, 20)
+            )
+
+            metrics["error_rate"] += (
+                progress * 0.07
+                + np.random.normal(0, 0.01)
+            )
 
         elif failure_type == "network_degradation":
 
             metrics["latency_ms"] = (
-                60 + progress * 700 + np.random.normal(0, 20)
+                60
+                + progress * 250
+                + np.random.normal(0, 25)
             )
 
-            metrics["error_rate"] += progress * 0.20
+            metrics["error_rate"] += (
+                progress * 0.08
+                + np.random.normal(0, 0.015)
+            )
 
-            metrics["request_rate"] *= (1 - progress * 0.4)
+            metrics["request_rate"] *= (
+                1 - progress * 0.25
+            )
 
-        # Keep values within sensible ranges
+        # Keep values realistic
+
         metrics["cpu_usage"] = np.clip(
-            metrics["cpu_usage"], 0, 100
+            metrics["cpu_usage"],
+            0,
+            100
         )
 
         metrics["memory_usage"] = np.clip(
-            metrics["memory_usage"], 0, 100
+            metrics["memory_usage"],
+            0,
+            100
+        )
+
+        metrics["request_rate"] = max(
+            0,
+            metrics["request_rate"]
+        )
+
+        metrics["latency_ms"] = max(
+            1,
+            metrics["latency_ms"]
+        )
+
+        metrics["db_latency_ms"] = max(
+            1,
+            metrics["db_latency_ms"]
         )
 
         metrics["error_rate"] = np.clip(
-            metrics["error_rate"], 0, 1
+            metrics["error_rate"],
+            0,
+            1
         )
 
         sequence.append(metrics)
 
     return sequence
-
 
 def generate_dataset(
     num_normal=8000,
